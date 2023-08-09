@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">ArtSpace</string>
+    <string name="tittle1">Бред Питт</string>
+    <string name="artist1">Бред Питт</string>
+    <string name="tittle2">Клуни</string>
+    <string name="artist2">Джордж</string>
+    <string name="tittle3">Пикасо</string>
+    <string name="artist3">Даль</string>
+    <string name="tittle4">Паль</string>
+    <string name="artist4">Алексей</string>
+    <string name="tittle5">Панин</string>
+    <string name="artist5">Дубравин</string>
+
+</resources>
