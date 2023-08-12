@@ -1,7 +1,6 @@
 package com.example.artspace
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -27,15 +26,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.artspace.Retrofit.API
 import com.example.artspace.ui.theme.ArtSpaceTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
-import androidx.compose.material3.Icon as Icon1
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,9 +63,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun GreetingArtSpace(image: Int, titleText: Int, artistText: Int, clickOnPreviousButton:()-> Unit, clickOnNextButton:()-> Unit) {
-
-
+fun GreetingArtSpace(
+    image: Int,
+    productName:String,
+    productDescription: String,
+    clickOnPreviousButton:()-> Unit, clickOnNextButton:()-> Unit) {
 
 
         Column(
@@ -90,10 +97,10 @@ fun GreetingArtSpace(image: Int, titleText: Int, artistText: Int, clickOnPreviou
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = stringResource(id = titleText), fontSize = 24.sp)
+                Text(text = productName, fontSize = 24.sp)
                 Text(
-                    text = stringResource(id = artistText),
-                    fontSize = 16.sp,
+                    text = productDescription,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -105,6 +112,7 @@ fun GreetingArtSpace(image: Int, titleText: Int, artistText: Int, clickOnPreviou
             ) {
                 Button(onClick = {
                     clickOnPreviousButton()
+
                 }) {
                     Text(
                         text = "Previous",
@@ -113,6 +121,7 @@ fun GreetingArtSpace(image: Int, titleText: Int, artistText: Int, clickOnPreviou
                 }
                 Button(onClick = {
                     clickOnNextButton()
+
                 }) {
                     Text(text = "Next")
                 }
@@ -125,16 +134,52 @@ fun GreetingArtSpace(image: Int, titleText: Int, artistText: Int, clickOnPreviou
 @Composable
 fun GreetingSpaceApp(){
     var pictureNumber by remember { mutableStateOf(1) }
+    var productTitle by remember { mutableStateOf("") }
+    var productCategory by remember { mutableStateOf("") }
+    var listOfProduct: List<String> by remember { mutableStateOf(listOf()) }
 
+
+    //для отслеживания ответа в логах
+    val interceptor = HttpLoggingInterceptor()
+    interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+    val client = OkHttpClient.Builder()
+        .addInterceptor(interceptor)
+        .build()
+
+    //RETROFIT
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://dummyjson.com/").client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val api = retrofit.create(API::class.java)
+
+
+    //при клике меняем содержимое
     fun clickOnButtonNext(){
         if(pictureNumber<5) pictureNumber++ else {pictureNumber ==5}
+        CoroutineScope(Dispatchers.IO).launch{
+          val product = api.getProductById(pictureNumber)
+            productTitle = product.title
+            productCategory = product.description
+        }
 
     }
 
-
+    //при клике меняем содержимое
     fun clickOnButtonPrevious(){
         if(pictureNumber>1) pictureNumber-- else{pictureNumber==1}
+        CoroutineScope(Dispatchers.IO).launch{
+            val product = api.getProductById(pictureNumber)
+            productTitle = product.title
+            productCategory = product.description
+           // val productImage = product.images.get(1)
+
+        }
     }
+
+
 
 val previousPicture = SwipeAction(
     onSwipe = {clickOnButtonPrevious()},
@@ -154,15 +199,13 @@ startActions = listOf(previousPicture),
 endActions = listOf(nextPicture),
     swipeThreshold = 5.dp
 ) {
-
-
-    when (pictureNumber) {
-
+        when (pictureNumber) {
         1 -> {
+
             GreetingArtSpace(
                 image = R.drawable.digital_art,
-                titleText = R.string.tittle1,
-                artistText = R.string.artist1,
+                productName = productTitle,
+                productDescription = productCategory,
                 { clickOnButtonPrevious() }
             ) { clickOnButtonNext() }
 
@@ -171,8 +214,8 @@ endActions = listOf(nextPicture),
         2 -> {
             GreetingArtSpace(
                 image = R.drawable.digital_art2,
-                titleText = R.string.tittle2,
-                artistText = R.string.artist2,
+                productName = productTitle,
+                productDescription = productCategory,
                 { clickOnButtonPrevious() }
             ) { clickOnButtonNext() }
 
@@ -181,8 +224,8 @@ endActions = listOf(nextPicture),
         3 -> {
             GreetingArtSpace(
                 image = R.drawable.digital_art3,
-                titleText = R.string.tittle3,
-                artistText = R.string.artist3,
+                productName = productTitle,
+                productDescription = productCategory,
                 { clickOnButtonPrevious() }
             ) { clickOnButtonNext() }
 
@@ -191,8 +234,8 @@ endActions = listOf(nextPicture),
         4 -> {
             GreetingArtSpace(
                 image = R.drawable.digital_art4,
-                titleText = R.string.tittle4,
-                artistText = R.string.artist4,
+                productName = productTitle,
+                productDescription = productCategory,
                 { clickOnButtonPrevious() }
             ) { clickOnButtonNext() }
 
@@ -201,8 +244,8 @@ endActions = listOf(nextPicture),
         5 -> {
             GreetingArtSpace(
                 image = R.drawable.digital_art5,
-                titleText = R.string.tittle5,
-                artistText = R.string.artist5,
+                productName = productTitle,
+                productDescription = productCategory,
                 { clickOnButtonPrevious() }
             ) { clickOnButtonNext() }
 
